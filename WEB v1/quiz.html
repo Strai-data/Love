@@ -1,0 +1,731 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Computer Systems &amp; Assembly Quiz</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(circle at 15% 20%, #f3f8ff 0%, #e0edff 42%, #f4f1ff 100%);
+            color: #1c1a2b;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 520px;
+            height: 520px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.1) 70%);
+            filter: blur(0.5px);
+            z-index: 0;
+        }
+
+        body::before {
+            top: -240px;
+            left: -200px;
+        }
+
+        body::after {
+            bottom: -260px;
+            right: -200px;
+        }
+
+        .ambient-shape {
+            position: fixed;
+            width: 220px;
+            height: 220px;
+            border-radius: 36% 64% 53% 47% / 38% 37% 63% 62%;
+            background: linear-gradient(135deg, rgba(94, 119, 255, 0.25), rgba(255, 120, 196, 0.3));
+            filter: blur(0.6px);
+            z-index: 0;
+        }
+
+        .ambient-shape.one {
+            top: 8vh;
+            right: 12vw;
+            transform: rotate(18deg);
+        }
+
+        .ambient-shape.two {
+            bottom: 10vh;
+            left: 8vw;
+            transform: rotate(-24deg);
+        }
+
+        .quiz-shell {
+            position: relative;
+            z-index: 1;
+            width: min(88vw, 760px);
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: clamp(1.5rem, 2vw + 1rem, 2.5rem);
+            box-shadow: 0 32px 60px -32px rgba(27, 31, 66, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(122, 144, 255, 0.15);
+        }
+
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .quiz-title {
+            margin: 0;
+            font-size: clamp(1.6rem, 3vw, 2rem);
+            letter-spacing: 0.02em;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #5e77ff, #ff78c4);
+            color: #fff;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .progress {
+            margin-bottom: 1.75rem;
+        }
+
+        .progress__track {
+            width: 100%;
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(94, 119, 255, 0.15);
+            overflow: hidden;
+        }
+
+        .progress__bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(135deg, #5e77ff, #7f9dff);
+            transition: width 0.45s ease;
+        }
+
+        .progress__text {
+            margin-top: 0.6rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+            color: rgba(28, 26, 43, 0.72);
+        }
+
+        .question-card {
+            background: linear-gradient(135deg, rgba(126, 139, 255, 0.12), rgba(255, 255, 255, 0.7));
+            border-radius: 22px;
+            padding: clamp(1.4rem, 2vw + 1rem, 2rem);
+            border: 1px solid rgba(94, 119, 255, 0.15);
+            box-shadow: inset 0 -6px 18px rgba(94, 119, 255, 0.12);
+            display: grid;
+            gap: 1.05rem;
+        }
+
+        .question-text {
+            font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .choice-grid {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .choice-grid.is-complete {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.1rem;
+        }
+
+        .choice-grid.is-complete .completion-line {
+            font-size: 1.05rem;
+            color: rgba(28, 26, 43, 0.76);
+            max-width: 30ch;
+        }
+
+        .choice-button {
+            width: 100%;
+            border: 1px solid rgba(94, 119, 255, 0.18);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 0.95rem 1.1rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border 0.18s ease;
+            text-align: left;
+        }
+
+        .choice-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 22px -18px rgba(30, 41, 99, 0.4);
+            border-color: rgba(94, 119, 255, 0.32);
+        }
+
+        .choice-button:active {
+            transform: scale(0.995);
+        }
+
+        .choice-button:disabled {
+            cursor: default;
+            opacity: 0.72;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .choice-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            background: rgba(94, 119, 255, 0.16);
+            color: #5e77ff;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .choice-text {
+            flex: 1;
+        }
+
+        .choice-button.is-correct {
+            border-color: rgba(76, 175, 80, 0.4);
+            background: rgba(210, 255, 214, 0.72);
+            color: #1a3f1f;
+        }
+
+        .choice-button.is-incorrect {
+            border-color: rgba(244, 67, 54, 0.35);
+            background: rgba(255, 210, 206, 0.7);
+            color: #5a1b1b;
+            animation: wiggle 0.4s ease;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        .feedback {
+            min-height: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .feedback.is-correct {
+            color: #1f6630;
+        }
+
+        .feedback.is-error {
+            color: #8a1f1f;
+        }
+
+        .explanation {
+            padding: 1rem 1.1rem;
+            border-radius: 16px;
+            border: 1px dashed rgba(94, 119, 255, 0.25);
+            background: rgba(94, 119, 255, 0.08);
+            color: rgba(28, 26, 43, 0.8);
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            min-height: 0;
+        }
+
+        .explanation.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .continue-button {
+            display: none;
+            padding: 0.85rem 1.8rem;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #5e77ff, #7f9dff);
+            color: #fff;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            box-shadow: 0 18px 30px -18px rgba(30, 41, 99, 0.6);
+            justify-self: flex-start;
+        }
+
+        .continue-button.is-visible {
+            display: inline-flex;
+        }
+
+        .continue-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .restart-button {
+            padding: 0.85rem 1.8rem;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #5e77ff, #7f9dff);
+            color: #fff;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            box-shadow: 0 18px 30px -18px rgba(30, 41, 99, 0.6);
+        }
+
+        .restart-button:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 600px) {
+            .quiz-shell {
+                padding: 1.45rem;
+                border-radius: 22px;
+            }
+
+            .choice-button {
+                border-radius: 14px;
+                padding: 0.85rem 0.95rem;
+            }
+
+            .choice-badge {
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-shape one"></div>
+    <div class="ambient-shape two"></div>
+
+    <main class="quiz-shell" role="main">
+        <div class="quiz-header">
+            <h1 class="quiz-title">Computer Systems &amp; Assembly Quiz</h1>
+            <span class="badge">Interactive Mode</span>
+        </div>
+
+        <section class="progress" aria-live="polite">
+            <div class="progress__track" aria-hidden="true">
+                <div class="progress__bar" id="progress-bar"></div>
+            </div>
+            <div class="progress__text" id="progress-text">Question 1 of 34</div>
+        </section>
+
+        <section class="question-card" id="question-card">
+            <p class="question-text" id="question-text"></p>
+            <div class="choice-grid" id="choices" role="list"></div>
+            <div class="feedback" id="feedback" aria-live="polite"></div>
+            <div class="explanation" id="explanation">
+                <strong>Explanation:</strong>
+                <span id="explanation-text"></span>
+            </div>
+            <button type="button" class="continue-button" id="continue-button">Next Question</button>
+        </section>
+    </main>
+
+    <script>
+        const QUESTIONS = [
+            {
+                question: "What is a byte?",
+                choices: ["4 bits", "8 bits grouped together", "16 bits", "1 kilobyte"],
+                answer: "b",
+                explanation: "A byte is the standard unit of storage and represents 8 bits combined."
+            },
+            {
+                question: "What is a source program?",
+                choices: ["Machine code", "a program written in a high-level programming language", "Binary file", "Instruction set"],
+                answer: "b",
+                explanation: "A source program is human-readable code written in languages like C, Java, or Python."
+            },
+            {
+                question: "What are the steps of the compilation system?",
+                choices: ["compiler, assembler, optimizer, loader", "preprocessor, compiler, assembler, and linker", "editor, compiler, debugger, linker", "tokenizer, interpreter, executor, linker"],
+                answer: "b",
+                explanation: "The compilation process transforms high-level code into machine code through these four stages."
+            },
+            {
+                question: "In which step of the compilation system does the code go from a text file to binary?",
+                choices: ["preprocessing", "compilation", "assembly", "linking"],
+                answer: "c",
+                explanation: "During assembly, assembly language is translated into binary machine code."
+            },
+            {
+                question: "T or F: Each statement of assembly language corresponds to a single machine code.",
+                choices: ["True", "False", "Sometimes", "Depends on the CPU"],
+                answer: "a",
+                explanation: "Assembly has a one-to-one mapping with machine instructions."
+            },
+            {
+                question: "T or F: Code written in assembly language is very portable.",
+                choices: ["True", "False", "Only for RISC", "Only for CISC"],
+                answer: "b",
+                explanation: "Assembly is tied to the instruction set of a specific machine, so it is not portable."
+            },
+            {
+                question: "What are the two parts of a computer system?",
+                choices: ["CPU and GPU", "hardware and software", "memory and storage", "input and output"],
+                answer: "b",
+                explanation: "Hardware is the physical equipment, and software is the set of programs that run on it."
+            },
+            {
+                question: "What is the interface between the computer's hardware and software?",
+                choices: ["Operating system", "Application programming interface", "ISA (instruction set architecture)", "Device driver"],
+                answer: "c",
+                explanation: "The ISA defines the commands that software can use to control hardware."
+            },
+            {
+                question: "What are the two subsets of computer software?",
+                choices: ["Firmware and middleware", "Operating system and application programs", "Productivity and entertainment", "System and utility"],
+                answer: "b",
+                explanation: "The operating system manages resources, while applications perform user tasks."
+            },
+            {
+                question: "What is SSD short for?",
+                choices: ["Solid State Drive", "Sequential Storage Disk", "Static System Device", "Single Storage Drive"],
+                answer: "a",
+                explanation: "SSD is a nonvolatile storage device that is faster than traditional hard drives."
+            },
+            {
+                question: "Describe memory hierarchy.",
+                choices: ["Cache, Register, Main Memory, Secondary Storage", "Register, Cache, Main Memory, Secondary Storage", "Register, Main Memory, Cache, Secondary Storage", "Secondary Storage, Main Memory, Cache, Register"],
+                answer: "b",
+                explanation: "Registers and cache are on-chip (fastest), followed by main memory and then slower storage devices."
+            },
+            {
+                question: "T or F: Everything is represented as a sequence of binary numbers in digital systems.",
+                choices: ["True", "False", "Only for data, not instructions", "Only for numbers"],
+                answer: "a",
+                explanation: "All data in digital systems is encoded in binary (0s and 1s)."
+            },
+            {
+                question: "Is one represented as high or low voltage?",
+                choices: ["High", "Low", "Either, depending on the system", "No voltage"],
+                answer: "a",
+                explanation: "Digital logic usually uses high voltage to represent 1."
+            },
+            {
+                question: "Is 0 represented as high or low voltage?",
+                choices: ["High", "Low", "Either, depending on the system", "Negative voltage"],
+                answer: "b",
+                explanation: "Digital logic usually uses low voltage to represent 0."
+            },
+            {
+                question: "What is a memory address?",
+                choices: ["A unique number identifying the location of the byte in memory", "The name of a variable", "A pointer to a function", "The size of memory"],
+                answer: "a",
+                explanation: "Each byte in memory has a unique address for identification."
+            },
+            {
+                question: "How is word size determined?",
+                choices: ["By the compiler settings", "By the size of data the machine is designed for", "By the operating system", "By the hard drive capacity"],
+                answer: "b",
+                explanation: "Word size depends on the CPU architecture, commonly 64 bits today."
+            },
+            {
+                question: "What size is a pointer?",
+                choices: ["Always 4 bytes", "Always 8 bytes", "The same size as the word", "Half the size of the word"],
+                answer: "c",
+                explanation: "Pointers must be large enough to store any memory address, so they match the word size."
+            },
+            {
+                question: "How is Big Endian ordered?",
+                choices: ["Most significant byte has highest address", "Least significant byte has highest address", "Most significant byte has lowest address", "Least significant byte has lowest address"],
+                answer: "c",
+                explanation: "Big Endian stores the most significant byte at the lowest address, and the least significant at the highest."
+            },
+            {
+                question: "How is Little Endian ordered?",
+                choices: ["Most significant byte has highest address", "Least significant byte has highest address", "Most significant byte has lowest address", "Least significant byte has lowest address"],
+                answer: "d",
+                explanation: "Little Endian stores the least significant byte at the lowest address, and the most significant at the highest."
+            },
+            {
+                question: "What is the significance of a variable declared 'T *x;'?",
+                choices: ["It declares a structure", "It declares a pointer to type T", "It declares an array", "It declares a reference"],
+                answer: "b",
+                explanation: "The asterisk * declares a pointer, which stores the address of a value rather than the value directly."
+            },
+            {
+                question: "What is Moore's Law?",
+                choices: ["Processor speed doubles every month", "The number of transistors doubles every 18-24 months", "Memory capacity triples every year", "Power consumption halves every decade"],
+                answer: "b",
+                explanation: "Moore's Law observes the exponential growth of computing power over time."
+            },
+            {
+                question: "What is PC short for?",
+                choices: ["Program Code", "Processor Clock", "Program Counter", "Process Control"],
+                answer: "c",
+                explanation: "The program counter stores the address of the next instruction to be executed."
+            },
+            {
+                question: "Registers store what?",
+                choices: ["Archived data", "User files", "Heavily used program data", "Machine code comments"],
+                answer: "c",
+                explanation: "Registers are very fast memory used to store critical values during execution."
+            },
+            {
+                question: "What stores status information about the most recent arithmetic operation?",
+                choices: ["Instruction register", "Stack pointer", "Condition code", "Base pointer"],
+                answer: "c",
+                explanation: "Condition codes indicate results such as zero, negative, overflow, etc."
+            },
+            {
+                question: "T or F: Condition code is not used for conditional branching.",
+                choices: ["True", "False", "Only on RISC processors", "Only on CISC processors"],
+                answer: "b",
+                explanation: "Condition codes are used directly in conditional jumps and branches."
+            },
+            {
+                question: "What are the three basic operations of machine code?",
+                choices: ["Input, processing, output", "Arithmetic and logic, memory/data movement, control flow", "Fetch, decode, execute", "Compile, assemble, link"],
+                answer: "b",
+                explanation: "Machine code supports calculations, memory access, and program control."
+            },
+            {
+                question: "CISC or RISC? Large number of instructions.",
+                choices: ["CISC", "RISC", "Both", "Neither"],
+                answer: "a",
+                explanation: "CISC processors implement many specialized instructions."
+            },
+            {
+                question: "CISC or RISC? Small number of instructions.",
+                choices: ["CISC", "RISC", "Both", "Neither"],
+                answer: "b",
+                explanation: "RISC processors use a simplified instruction set for efficiency."
+            },
+            {
+                question: "CISC or RISC? Varying instruction length.",
+                choices: ["CISC", "RISC", "Both", "Neither"],
+                answer: "a",
+                explanation: "CISC instructions vary in length, while RISC has fixed-length instructions."
+            },
+            {
+                question: "CISC or RISC? Compact code size.",
+                choices: ["CISC", "RISC", "Both", "Neither"],
+                answer: "a",
+                explanation: "CISC's many instructions often result in smaller program sizes."
+            },
+            {
+                question: "CISC or RISC? Large code size.",
+                choices: ["CISC", "RISC", "Both", "Neither"],
+                answer: "b",
+                explanation: "RISC code is more verbose because complex operations require multiple simple instructions."
+            },
+            {
+                question: "What type of operand deals with constant data?",
+                choices: ["Immediate operand", "Register operand", "Memory operand", "Pointer operand"],
+                answer: "a",
+                explanation: "Immediate operands are fixed values embedded directly in instructions."
+            },
+            {
+                question: "What type of operand deals with an integer register?",
+                choices: ["Immediate operand", "Register operand", "Memory operand", "Flag operand"],
+                answer: "b",
+                explanation: "Register operands directly reference CPU registers for fast access."
+            },
+            {
+                question: "What type of operand deals with 8 consecutive bytes?",
+                choices: ["Immediate operand", "Register operand", "Memory operand", "Vector operand"],
+                answer: "c",
+                explanation: "Memory operands reference data stored in memory rather than registers or constants."
+            }
+        ];
+
+        const CHOICE_LABELS = ["a", "b", "c", "d"];
+
+        const questionTextEl = document.getElementById("question-text");
+        const choicesContainer = document.getElementById("choices");
+        const feedbackEl = document.getElementById("feedback");
+        const explanationEl = document.getElementById("explanation");
+        const explanationTextEl = document.getElementById("explanation-text");
+        const progressTextEl = document.getElementById("progress-text");
+        const progressBarEl = document.getElementById("progress-bar");
+        const continueButton = document.getElementById("continue-button");
+
+        let currentIndex = 0;
+        let attemptCounter = 0;
+        let mistakeCount = 0;
+        let isLocked = false;
+        let pendingAdvance = false;
+
+        function renderQuestion() {
+            const current = QUESTIONS[currentIndex];
+            questionTextEl.textContent = current.question;
+            feedbackEl.textContent = "";
+            feedbackEl.className = "feedback";
+            explanationEl.classList.remove("is-visible");
+            explanationTextEl.textContent = "";
+            continueButton.classList.remove("is-visible");
+            continueButton.style.display = "none";
+            continueButton.disabled = false;
+            choicesContainer.classList.remove("is-complete");
+
+            attemptCounter = 0;
+            pendingAdvance = false;
+            isLocked = false;
+
+            progressTextEl.textContent = `Question ${currentIndex + 1} of ${QUESTIONS.length}`;
+            progressBarEl.style.width = `${(currentIndex / QUESTIONS.length) * 100}%`;
+
+            choicesContainer.innerHTML = "";
+
+            current.choices.forEach((choice, idx) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "choice-button";
+                button.dataset.choice = CHOICE_LABELS[idx];
+                button.innerHTML = `
+                    <span class="choice-badge">${CHOICE_LABELS[idx]}</span>
+                    <span class="choice-text">${choice}</span>
+                `;
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function setButtonsDisabled(state) {
+            const buttons = choicesContainer.querySelectorAll(".choice-button");
+            buttons.forEach((button) => {
+                button.disabled = state;
+            });
+        }
+
+        function showContinueButton() {
+            const isLastQuestion = currentIndex === QUESTIONS.length - 1;
+            continueButton.textContent = isLastQuestion ? "Finish Quiz" : "Next Question";
+            continueButton.classList.add("is-visible");
+            continueButton.style.display = "inline-flex";
+            continueButton.focus();
+            pendingAdvance = true;
+        }
+
+        function showCompletion() {
+            progressBarEl.style.width = "100%";
+            progressTextEl.textContent = "Quiz complete!";
+            questionTextEl.innerHTML = "&#x1F389; Quiz complete!";
+            feedbackEl.textContent = "";
+            feedbackEl.className = "feedback";
+            explanationEl.classList.remove("is-visible");
+            explanationTextEl.textContent = "";
+            continueButton.classList.remove("is-visible");
+            continueButton.style.display = "none";
+
+            choicesContainer.classList.add("is-complete");
+            choicesContainer.innerHTML = `
+                <p class="completion-line">You answered all ${QUESTIONS.length} questions.</p>
+                <p class="completion-line">Mistakes recorded: ${mistakeCount}</p>
+                <button type="button" class="restart-button" id="restart-button">Restart Quiz</button>
+            `;
+
+            const restartButton = document.getElementById("restart-button");
+            restartButton.addEventListener("click", () => {
+                currentIndex = 0;
+                mistakeCount = 0;
+                renderQuestion();
+            });
+        }
+
+        choicesContainer.addEventListener("click", (event) => {
+            const target = event.target.closest(".choice-button");
+            if (!target || isLocked) {
+                return;
+            }
+
+            const selection = target.dataset.choice;
+            const current = QUESTIONS[currentIndex];
+
+            if (!CHOICE_LABELS.includes(selection)) {
+                feedbackEl.innerHTML = "&#x274C; Error, try again.";
+                feedbackEl.className = "feedback is-error";
+                return;
+            }
+
+            if (selection === current.answer) {
+                setButtonsDisabled(true);
+                target.classList.add("is-correct");
+                feedbackEl.innerHTML = "&#x2705; Correct!";
+                feedbackEl.className = "feedback is-correct";
+                explanationTextEl.textContent = current.explanation;
+                explanationEl.classList.add("is-visible");
+                isLocked = true;
+                showContinueButton();
+            } else {
+                attemptCounter += 1;
+                target.classList.remove("is-correct");
+                target.classList.add("is-incorrect");
+                feedbackEl.innerHTML = "&#x274C; Error, try again.";
+                feedbackEl.className = "feedback is-error";
+
+                setTimeout(() => {
+                    target.classList.remove("is-incorrect");
+                }, 400);
+
+                if (attemptCounter >= 2) {
+                    mistakeCount += 1;
+                    const correctButton = choicesContainer.querySelector(`.choice-button[data-choice="${current.answer}"]`);
+                    if (correctButton) {
+                        correctButton.classList.add("is-correct");
+                    }
+                    setButtonsDisabled(true);
+                    explanationTextEl.textContent = current.explanation;
+                    explanationEl.classList.add("is-visible");
+                    feedbackEl.innerHTML = "&#x26A0; Attempt limit reached. Counted as a mistake.";
+                    feedbackEl.className = "feedback is-error";
+                    isLocked = true;
+                    showContinueButton();
+                }
+            }
+        });
+
+        continueButton.addEventListener("click", () => {
+            if (!pendingAdvance) {
+                return;
+            }
+
+            continueButton.classList.remove("is-visible");
+            continueButton.style.display = "none";
+            explanationEl.classList.remove("is-visible");
+            explanationTextEl.textContent = "";
+            pendingAdvance = false;
+            currentIndex += 1;
+
+            if (currentIndex < QUESTIONS.length) {
+                renderQuestion();
+            } else {
+                showCompletion();
+            }
+        });
+
+        renderQuestion();
+    </script>
+</body>
+</html>

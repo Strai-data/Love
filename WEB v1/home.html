@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Function Sketcher</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="controls">
+        <h1>Function Sketcher</h1>
+        <p>Type a function of <code>x</code> or <code>y</code> to sketch it in real time. Try <code>sin(x)</code>, <code>cos(y/2)</code>, or craft your own.</p>
+        <form id="function-form">
+          <div class="field">
+            <label for="function-x">f(x) =</label>
+            <input
+              id="function-x"
+              name="function-x"
+              type="text"
+              placeholder="e.g. x2-1 or sin(x)"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Function of x"
+            />
+          </div>
+          <div class="field">
+            <label for="function-y">f(y) =</label>
+            <input
+              id="function-y"
+              name="function-y"
+              type="text"
+              placeholder="Optional: e.g. y2-1 or cos(y)"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Function of y"
+            />
+          </div>
+          <button type="submit">Draw</button>
+        </form>
+        <div class="quick-actions" aria-label="Quick function suggestions">
+          <button type="button" id="heart-button" class="ghost-btn">Heart</button>
+        </div>
+        <p class="hint">Leave both inputs empty or tap Heart to see the cardioid again. Click the heart to make it flutter.</p>
+      </section>
+      <section class="canvas-wrapper">
+        <canvas id="graph" width="520" height="520" aria-label="Function graph"></canvas>
+      </section>
+    </main>
+    <script src="js/script.js" defer></script>
+  </body>
+</html>
