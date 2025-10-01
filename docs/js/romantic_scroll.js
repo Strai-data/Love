@@ -157,8 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Submit ring size to Supabase
         const submitRingSizeToSupabase = async (ringSizeValue) => {
-            const response = await fetch(`${SUPABASE_RING_ENDPOINT}?id=eq.1`, {
-                method: 'PATCH',
+    const response = await fetch(SUPABASE_RING_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ ring_size: ringSizeValue }),
+    });
+
                 headers: {
                     'Content-Type': 'application/json',
                     apikey: SUPABASE_KEY,
@@ -1083,6 +1092,7 @@ function applyParallax(panels) {
     });
 
 }
+
 
 
 
