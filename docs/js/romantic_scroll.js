@@ -157,31 +157,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Submit ring size to Supabase
         const submitRingSizeToSupabase = async (ringSizeValue) => {
-    const response = await fetch(SUPABASE_RING_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-            Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({ ring_size: ringSizeValue }),
-    });
+    try {
+        const response = await fetch(SUPABASE_RING_ENDPOINT, {
+            method: 'POST', // insert a new row each time
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+                Prefer: 'return=minimal',
+            },
+            body: JSON.stringify({ ring_size: ringSizeValue }),
+        });
 
-                headers: {
-                    'Content-Type': 'application/json',
-                    apikey: SUPABASE_KEY,
-                    Authorization: `Bearer ${SUPABASE_KEY}`,
-                    Prefer: 'return=minimal',
-                },
-                body: JSON.stringify({ ring_size: ringSizeValue }),
-            });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.warn(`Supabase insert failed (${response.status}): ${errorText}`);
+        }
+    } catch (err) {
+        console.error('Supabase request error:', err);
+    }
+};
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Supabase update failed (${response.status}): ${errorText}`);
-            }
-        };
 
         ringSizeForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -1092,6 +1088,7 @@ function applyParallax(panels) {
     });
 
 }
+
 
 
 
